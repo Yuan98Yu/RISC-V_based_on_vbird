@@ -110,7 +110,7 @@ module e203_ifu_ift2icb(
   // since last accessed by IFU, and the output of it is holding up
   // last value. 
   `ifdef E203_HAS_ITCM //{
-  input  ifu2itcm_holdup,
+  input  itcm2ifu_holdup,
   //input  ifu2itcm_replay,
   `endif//}
 
@@ -301,41 +301,12 @@ module e203_ifu_ift2icb(
 
   // The current accessing PC is crossing the lane boundry
   wire ifu_req_lane_cross = 1'b0
-                    `ifdef E203_HAS_ITCM //{
-                         | (
-                            ifu_req_pc2itcm   
-                         `ifdef E203_ITCM_DATA_WIDTH_IS_32 //{
-                            & (ifu_req_pc[1] == 1'b1)
-                         `endif//}
-                         `ifdef E203_ITCM_DATA_WIDTH_IS_64 //{
-                            & (ifu_req_pc[2:1] == 2'b11)
-                         `endif//}
-                           )
-                    `endif//}
-                    `ifdef E203_HAS_MEM_ITF //{
-                         | (
-                            ifu_req_pc2mem   
-                         `ifdef E203_SYSMEM_DATA_WIDTH_IS_32 //{
-                            & (ifu_req_pc[1] == 1'b1)
-                         `endif//}
-                         `ifdef E203_SYSMEM_DATA_WIDTH_IS_64 //{
-                            & (ifu_req_pc[2:1] == 2'b11)
-                         `endif//}
-                           )
-                    `endif//}
-                    ;
-
-  // The current accessing PC is begining of the lane boundry
-  wire ifu_req_lane_begin = 1'b0
 // 由于设计的是32位对齐的指令流，不对非对齐情况做处理
                     // `ifdef E203_HAS_ITCM //{
                     //      | (
                     //         ifu_req_pc2itcm   
-                    //      `ifdef E203_ITCM_DATA_WIDTH_IS_32 //{
-                    //         & (ifu_req_pc[1] == 1'b0)
-                    //      `endif//}
                     //      `ifdef E203_ITCM_DATA_WIDTH_IS_64 //{
-                    //         & (ifu_req_pc[2:1] == 2'b00)
+                    //         & (ifu_req_pc[2:1] == 2'b11)
                     //      `endif//}
                     //        )
                     // `endif//}
@@ -343,14 +314,37 @@ module e203_ifu_ift2icb(
                     //      | (
                     //         ifu_req_pc2mem   
                     //      `ifdef E203_SYSMEM_DATA_WIDTH_IS_32 //{
-                    //         & (ifu_req_pc[1] == 1'b0)
+                    //         & (ifu_req_pc[1] == 1'b1)
                     //      `endif//}
                     //      `ifdef E203_SYSMEM_DATA_WIDTH_IS_64 //{
-                    //         & (ifu_req_pc[2:1] == 2'b00)
+                    //         & (ifu_req_pc[2:1] == 2'b11)
                     //      `endif//}
                     //        )
                     // `endif//}
                     // ;
+
+  // The current accessing PC is begining of the lane boundry（ ITCM 为64位，其64位输出称为一个 lane ）
+  wire ifu_req_lane_begin = 1'b0
+                    `ifdef E203_HAS_ITCM //{
+                         | (
+                            ifu_req_pc2itcm   
+                         `ifdef E203_ITCM_DATA_WIDTH_IS_64 //{
+                            & (ifu_req_pc[2:1] == 2'b00)
+                         `endif//}
+                           )
+                    `endif//}
+                    `ifdef E203_HAS_MEM_ITF //{
+                         | (
+                            ifu_req_pc2mem   
+                         `ifdef E203_SYSMEM_DATA_WIDTH_IS_32 //{
+                            & (ifu_req_pc[1] == 1'b0)
+                         `endif//}
+                         `ifdef E203_SYSMEM_DATA_WIDTH_IS_64 //{
+                            & (ifu_req_pc[2:1] == 2'b00)
+                         `endif//}
+                           )
+                    `endif//}
+                    ;
   
 
   // The scheme to check if the current accessing PC is same as last accessed ICB address
@@ -368,13 +362,16 @@ module e203_ifu_ift2icb(
   //     * Note: All other non-sequential cases (e.g., flush, branch or replay) are not
   //          treated as this case
   //  
-  wire req_lane_cross_r;
-  wire ifu_req_lane_same = ifu_req_seq & (ifu_req_lane_begin ? req_lane_cross_r : 1'b1);
-  
+  // 上一条指令是否跨 lane ， 不可能出现跨 lane 的情况
+  // wire req_lane_cross_r;
   // The current accessing PC is same as last accessed ICB address
+  // wire ifu_req_lane_same = ifu_req_seq & (ifu_req_lane_begin ? req_lane_cross_r : 1'b1);
+  wire ifu_req_lane_same = ifu_req_seq & (ifu_req_lane_begin ? 1'b0 : 1'b1);
+  
+  // ITCM 是否 holdup
   wire ifu_req_lane_holdup = 1'b0
             `ifdef E203_HAS_ITCM //{
-            | (ifu_req_pc2itcm & ifu2itcm_holdup & (~itcm_nohold)) 
+            | (ifu_req_pc2itcm & itcm2ifu_holdup & (~itcm_nohold)) 
             `endif//}
             ;
 
@@ -435,12 +432,13 @@ module e203_ifu_ift2icb(
                 ifu_icb_rsp2leftover ? ifu_icb_rsp_hsked : i_ifu_rsp_hsked);
   assign state_1st_nxt     = 
                 (
-              // If it need two requests but the ifetch request is not ready to be 
-              //   accepted, then next state is ICB_STATE_WAIT2ND
-                  (req_need_2uop_r & (~ifu_icb_cmd_ready)) ?  ICB_STATE_WAIT2ND
-              // If it need two requests and the ifetch request is ready to be 
-              //   accepted, then next state is ICB_STATE_2ND
-                  : (req_need_2uop_r & (ifu_icb_cmd_ready)) ?  ICB_STATE_2ND 
+              // 不可能跨界，不可能需两次 ifetch request
+              // // If it need two requests but the ifetch request is not ready to be 
+              // //   accepted, then next state is ICB_STATE_WAIT2ND
+              //     (req_need_2uop_r & (~ifu_icb_cmd_ready)) ?  ICB_STATE_WAIT2ND
+              // // If it need two requests and the ifetch request is ready to be 
+              // //   accepted, then next state is ICB_STATE_2ND
+              //     : (req_need_2uop_r & (ifu_icb_cmd_ready)) ?  ICB_STATE_2ND 
               // If it need zero or one requests and new req handshaked, then 
               //   next state is ICB_STATE_1ST
               // If it need zero or one requests and no new req handshaked, then
@@ -481,20 +479,26 @@ module e203_ifu_ift2icb(
 
   /////////////////////////////////////////////////////////////////////////////////
   // Save the same_cross_holdup flags for this ifetch request to be used
-  wire req_same_cross_holdup_r;
+  // 所有指令对齐，不可能跨 lane
+  wire req_same_cross_holdup_r = 1'b0;
 
-  wire req_same_cross_holdup = ifu_req_lane_same & ifu_req_lane_cross & ifu_req_lane_holdup;
-  wire req_need_2uop         = (  ifu_req_lane_same  & ifu_req_lane_cross & (~ifu_req_lane_holdup))
-                             | ((~ifu_req_lane_same) & ifu_req_lane_cross);
+  // 所有指令对齐，不可能跨 lane
+  wire req_same_cross_holdup = 1'b0;
+  // wire req_same_cross_holdup = ifu_req_lane_same & ifu_req_lane_cross & ifu_req_lane_holdup;
+  // 由于指令为32位对齐，不可能出现需跨界读取的情况
+  // wire req_need_2uop         = (  ifu_req_lane_same  & ifu_req_lane_cross & (~ifu_req_lane_holdup))
+  //                            | ((~ifu_req_lane_same) & ifu_req_lane_cross);
+  // 当指令在同一个 lane 且 ITCM 的输出没变时，直接使用 ITCM 的输出，而不用重新访问 ITCM。
   wire req_need_0uop         = ifu_req_lane_same & (~ifu_req_lane_cross) & ifu_req_lane_holdup;
 
-  sirv_gnrl_dfflr #(1) req_same_cross_holdup_dfflr (ifu_req_hsked, req_same_cross_holdup, req_same_cross_holdup_r, clk, rst_n);
-  sirv_gnrl_dfflr #(1) req_need_2uop_dfflr         (ifu_req_hsked, req_need_2uop,         req_need_2uop_r,         clk, rst_n);
+  // sirv_gnrl_dfflr #(1) req_same_cross_holdup_dfflr (ifu_req_hsked, req_same_cross_holdup, req_same_cross_holdup_r, clk, rst_n);
+  // sirv_gnrl_dfflr #(1) req_need_2uop_dfflr         (ifu_req_hsked, req_need_2uop,         req_need_2uop_r,         clk, rst_n);
   sirv_gnrl_dfflr #(1) req_need_0uop_dfflr         (ifu_req_hsked, req_need_0uop,         req_need_0uop_r,         clk, rst_n);
-  sirv_gnrl_dfflr #(1) req_lane_cross_dfflr        (ifu_req_hsked, ifu_req_lane_cross,    req_lane_cross_r,        clk, rst_n);
+  // sirv_gnrl_dfflr #(1) req_lane_cross_dfflr        (ifu_req_hsked, ifu_req_lane_cross,    req_lane_cross_r,        clk, rst_n);
 
   /////////////////////////////////////////////////////////////////////////////////
   // Save the indicate flags for this ICB transaction to be used
+  // 当前 PC
   wire [`E203_PC_SIZE-1:0] ifu_icb_cmd_addr;
   `ifdef E203_HAS_ITCM //{
   wire ifu_icb_cmd2itcm;
@@ -522,29 +526,23 @@ module e203_ifu_ift2icb(
   // Please see "The itfctrl scheme introduction" for more details 
   //    * Case #1: Loaded when the last holdup upper 16bits put into leftover
   //    * Case #2: Loaded when the 1st request uop rdata upper 16bits put into leftover 
-  wire holdup2leftover_sel = req_same_cross_holdup;
-  wire holdup2leftover_ena = ifu_req_hsked & holdup2leftover_sel;
+  // 不可能跨 lane，无需 left_over
+  wire holdup2leftover_sel = 1'b0;
+  wire holdup2leftover_ena = 1'b0;
+  // wire holdup2leftover_sel = req_same_cross_holdup;
+  // wire holdup2leftover_ena = ifu_req_hsked & holdup2leftover_sel;
   wire [15:0]  put2leftover_data = 16'b0   
-  //wire [15:0]  holdup2leftover_data = 16'b0   
-                     `ifdef E203_HAS_ITCM //{
-                      | ({16{icb_cmd2itcm_r}} & ifu2itcm_icb_rsp_rdata[`E203_ITCM_DATA_WIDTH-1:`E203_ITCM_DATA_WIDTH-16]) 
-                     `endif//}
-                     `ifdef E203_HAS_MEM_ITF //{
-                      | ({16{icb_cmd2biu_r}} & ifu2biu_icb_rsp_rdata [`E203_SYSMEM_DATA_WIDTH-1:`E203_SYSMEM_DATA_WIDTH-16]) 
-                     `endif//}
-                      ;
+  // 无需 left_over
+                    //  `ifdef E203_HAS_ITCM //{
+                    //   | ({16{icb_cmd2itcm_r}} & ifu2itcm_icb_rsp_rdata[`E203_ITCM_DATA_WIDTH-1:`E203_ITCM_DATA_WIDTH-16]) 
+                    //  `endif//}
+                    //  `ifdef E203_HAS_MEM_ITF //{
+                    //   | ({16{icb_cmd2biu_r}} & ifu2biu_icb_rsp_rdata [`E203_SYSMEM_DATA_WIDTH-1:`E203_SYSMEM_DATA_WIDTH-16]) 
+                    //  `endif//}
+                    //   ;
 
   wire uop1st2leftover_sel = ifu_icb_rsp2leftover;
   wire uop1st2leftover_ena = ifu_icb_rsp_hsked & uop1st2leftover_sel;
-
-  //wire [15:0]  uop1st2leftover_data = 16'b0   
-  //                   `ifdef E203_HAS_ITCM //{
-  //                    | ({16{icb_cmd2itcm_r}} & ifu2itcm_icb_rsp_rdata[`E203_ITCM_DATA_WIDTH-1:`E203_ITCM_DATA_WIDTH-16]) 
-  //                   `endif//}
-  //                   `ifdef E203_HAS_MEM_ITF //{
-  //                    | ({16{icb_cmd2biu_r}} & ifu2biu_icb_rsp_rdata [`E203_SYSMEM_DATA_WIDTH-1:`E203_SYSMEM_DATA_WIDTH-16]) 
-  //                   `endif//}
-  //                    ;
 
   wire uop1st2leftover_err = 1'b0   
                      `ifdef E203_HAS_ITCM //{
@@ -558,11 +556,7 @@ module e203_ifu_ift2icb(
   assign leftover_ena = holdup2leftover_ena 
                       | uop1st2leftover_ena;
 
-  assign leftover_nxt = 
-                      //  ({16{holdup2leftover_sel}} & holdup2leftover_data[15:0]) 
-                      //| ({16{uop1st2leftover_sel}} & uop1st2leftover_data[15:0]) 
-                        put2leftover_data[15:0] 
-                      ;
+  assign leftover_nxt = put2leftover_data[15:0];
 
   assign leftover_err_nxt = 
                         (holdup2leftover_sel & 1'b0)
