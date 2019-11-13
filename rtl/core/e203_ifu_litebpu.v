@@ -26,23 +26,35 @@
 `include "e203_defines.v"
 
 module e203_ifu_litebpu(input [`E203_PC_SIZE-1:0] pc,                  // 当前的 PC
-                        input dec_i_valid,                             // 指令是否合法
+
+						// mini-decoded 输出
                         input dec_jal,                                 // 是否是 jal 指令
                         input dec_jalr,                                // 是否是 jalr 指令
                         input dec_bxx,                                 // 是否是 条件跳转指令
                         input [`E203_XLEN-1:0] dec_bjp_imm,            // 零扩展得到的32位立即数表示的偏移量
                         input [`E203_RFIDX_WIDTH-1:0] dec_jalr_rs1idx, // jalr 使用的基地址寄存器索引
+
+						// IR，无 OITF
+						// input  oitf_empty,
                         input ir_empty,                                // IR 是否为空（是否有指令处于EXU）
                         input ir_rs1en,                                // IR 是否使用 rs1读端口
                         input jalr_rs1idx_cam_irrdidx,                 // 处于 IR 的指令的写回目标寄存器索引是否为x1
-                        input ir_valid_clr,                            // IR 正处于 clear
-                        input [`E203_XLEN-1:0] rf2bpu_x1,              // 寄存器x1的数据直接拉出（x1常被用为link寄存器，因此做特别加速）
-                        input [`E203_XLEN-1:0] rf2bpu_rs1,             // 其它寄存器的数据，统一从寄存器读端口1 读出
+
+						// 用于 PC 生成的输出
                         output bpu_wait,                               // bpu 是否处于 wait
                         output prdt_taken,                             // 是否采取分支预测
                         output [`E203_PC_SIZE-1:0] prdt_pc_add_op1,    // 分支预测的 op1
                         output [`E203_PC_SIZE-1:0] prdt_pc_add_op2,    // 分支预测的 op2
-                        output bpu2rf_rs1_ena,                         // 寄存器读端口1 的使能
+
+						// 读寄存器组（x1 和 读端口1）
+						output bpu2rf_rs1_ena,                         // 寄存器读端口1 的使能
+                        input ir_valid_clr,                            // IR 正处于 clear
+                        input [`E203_XLEN-1:0] rf2bpu_x1,              // 寄存器x1的数据直接拉出（x1常被用为link寄存器，因此做特别加速）
+                        input [`E203_XLEN-1:0] rf2bpu_rs1,             // 其它寄存器的数据，统一从寄存器读端口1 读出
+
+						input dec_i_valid,                             // 指令是否合法
+
+						// SoC
                         input clk,
                         input rst_n);
     

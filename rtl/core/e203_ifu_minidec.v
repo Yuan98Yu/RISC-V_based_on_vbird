@@ -25,7 +25,7 @@
 // ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  ==  == 
 `include "e203_defines.v"
 
-module e203_ifu_minidec(input [`E203_INSTR_SIZE-1:0] instr,             // 32位指令（刚由ITCM或BIU取出，还未存入 IR
+module e203_ifu_minidec(input [`E203_INSTR_SIZE-1:0] instr,             // 32位指令（刚由ITCM或BIU取出，还未存入 IR）
                         output dec_rs1en,                               // 是否使用源寄存器1
                         output dec_rs2en,                               // 是否使用源寄存器2
                         output [`E203_RFIDX_WIDTH-1:0] dec_rs1idx,      // 源寄存器1的索索引
@@ -36,6 +36,8 @@ module e203_ifu_minidec(input [`E203_INSTR_SIZE-1:0] instr,             // 32位
                         output dec_rem,                                 // 是否是 rem 指令
                         output dec_divu,                                // 是否是 无符号除法
                         output dec_remu,                                // 是否是 remu 指令
+
+						output dec_rv32,								// 是否是32位指令
                         output dec_bjp,                                 // 是否是 条件跳转指令
                         output dec_jal,                                 // 是否是 jal
                         output dec_jalr,                                // 是否是 jalr
@@ -79,7 +81,7 @@ module e203_ifu_minidec(input [`E203_INSTR_SIZE-1:0] instr,             // 32位
     .dec_divu  (dec_divu),
     .dec_remu  (dec_remu),
     
-    .dec_rv32(),
+    .dec_rv32(dec_rv32),
     .dec_bjp (dec_bjp),
     .dec_jal (dec_jal),
     .dec_jalr(dec_jalr),

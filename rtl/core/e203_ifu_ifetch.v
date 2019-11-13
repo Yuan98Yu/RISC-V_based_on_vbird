@@ -33,7 +33,7 @@ module e203_ifu_ifetch(
   input  [`E203_PC_SIZE-1:0] pc_rtvec,    // reset指定的PC
   //////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////
-  // 取指单元对Memory系统（ITCM 和 主存）的接口，使用内部总线协议
+  // 取指单元对Memory系统（实际访问 ifu_ift2icb）的接口，使用内部总线协议
   //    * IFetch REQ channel
   output ifu_req_valid, // Handshake valid
   input  ifu_req_ready, // Handshake ready
@@ -43,7 +43,7 @@ module e203_ifu_ifetch(
             //       will handle the unalign cases and split-and-merge works
   output [`E203_PC_SIZE-1:0] ifu_req_pc, // Fetch PC
   output ifu_req_seq, // This request is a sequential instruction fetch
-//   output ifu_req_seq_rv32, // This request is incremented 32bits fetch
+  output ifu_req_seq_rv32, // This request is incremented 32bits fetch
   output [`E203_PC_SIZE-1:0] ifu_req_last_pc, // The last accessed
                                            // PC address (i.e., pc_r)
   //    * IFetch RSP channel
@@ -54,24 +54,25 @@ module e203_ifu_ifetch(
             //   fetched from the fetching start PC address.
             //   The targetd (ITCM, ICache or Sys-MEM) ctrl modules 
             //   will handle the unalign cases and split-and-merge works
-  //input  ifu_rsp_replay,
   input  [`E203_INSTR_SIZE-1:0] ifu_rsp_instr, // Response instruction
 
   //////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////
   // The IR stage to EXU interface
-  output [`E203_INSTR_SIZE-1:0] ifu_o_ir,// The instruction register
-  output [`E203_PC_SIZE-1:0] ifu_o_pc,   // The PC register along with
+  output [`E203_INSTR_SIZE-1:0] ifu_o_ir,// IR （32位指令）
+  output [`E203_PC_SIZE-1:0] ifu_o_pc,   // 相应的 PC
   output ifu_o_pc_vld,
   output [`E203_RFIDX_WIDTH-1:0] ifu_o_rs1idx,
   output [`E203_RFIDX_WIDTH-1:0] ifu_o_rs2idx,
   output ifu_o_prdt_taken,               // The Bxx is predicted as taken
-  output ifu_o_misalgn,                  // The fetch misalign 
+  output ifu_o_misalgn,                  // The fetch misalign，存疑
   output ifu_o_buserr,                   // The fetch bus error
-  output ifu_o_muldiv_b2b,               // The mul/div back2back case
-  output ifu_o_valid,         // Handshake signals with EXU stage
+  output ifu_o_muldiv_b2b,               // mul/div 类的指令，分别连续进行两次（back to back)
+  // Handshake signals with EXU stages
+  output ifu_o_valid,         
   input  ifu_o_ready,
 
+  // 流水线冲刷的握手信号和其传来的新地址
   output  pipe_flush_ack,
   input   pipe_flush_req,
   input   [`E203_PC_SIZE-1:0] pipe_flush_add_op1,  

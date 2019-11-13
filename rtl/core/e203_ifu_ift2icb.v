@@ -29,11 +29,10 @@
 
 module e203_ifu_ift2icb(
 
-
   input  itcm_nohold,
   //////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////
-  // 访问存储系统（包括 ITCM 和 System Memory）的通用信号, 内部协议
+  // 与 ifetch 的通信接口, 内部协议
   //    * IFetch REQ channel
   input  ifu_req_valid, // Handshake valid
   output ifu_req_ready, // Handshake ready
@@ -41,11 +40,10 @@ module e203_ifu_ift2icb(
             //       by req_len signal.
             //       The targetd (ITCM, ICache or Sys-MEM) ctrl modules 
             //       will handle the unalign cases and split-and-merge works
-  input  [`E203_PC_SIZE-1:0] ifu_req_pc, // Fetch PC
-  input  ifu_req_seq, // This request is a sequential instruction fetch
-  input  ifu_req_seq_rv32, // This request is incremented 32bits fetch
-  input  [`E203_PC_SIZE-1:0] ifu_req_last_pc, // The last accessed
-                                           // PC address (i.e., pc_r)
+  input  [`E203_PC_SIZE-1:0] ifu_req_pc, // 取指地址（当前 PC ）
+  input  ifu_req_seq, 				     // 顺序指令
+  input  ifu_req_seq_rv32, 				 // 32位 顺序指令
+  input  [`E203_PC_SIZE-1:0] ifu_req_last_pc, // 上条指令的 PC，用于判断 lane
                              
   //    * IFetch RSP channel
   output ifu_rsp_valid, // Response valid 
@@ -55,7 +53,7 @@ module e203_ifu_ift2icb(
             //   fetched from the fetching start PC address.
             //   The targetd (ITCM, ICache or Sys-MEM) ctrl modules 
             //   will handle the unalign cases and split-and-merge works
-  output [32-1:0] ifu_rsp_instr, // Response instruction
+  output [32-1:0] ifu_rsp_instr,		 // 取得的指令
 
 
 // 访问 ITCM 的 ICB 接口
@@ -70,14 +68,14 @@ module e203_ifu_ift2icb(
   input  ifu2itcm_icb_cmd_ready, // Handshake ready
             // Note: The data on rdata or wdata channel must be naturally
             //       aligned, this is in line with the AXI definition
-  output [`E203_ITCM_ADDR_WIDTH-1:0]   ifu2itcm_icb_cmd_addr, // Bus transaction start addr 
+  output [`E203_ITCM_ADDR_WIDTH-1:0]   ifu2itcm_icb_cmd_addr, // 总线访问地址
 
   //    * Bus RSP channel
   input  ifu2itcm_icb_rsp_valid, // Response valid 
   output ifu2itcm_icb_rsp_ready, // Response ready
   input  ifu2itcm_icb_rsp_err,   // Response error
             // Note: the RSP rdata is inline with AXI definition
-  input  [`E203_ITCM_DATA_WIDTH-1:0] ifu2itcm_icb_rsp_rdata, 
+  input  [`E203_ITCM_DATA_WIDTH-1:0] ifu2itcm_icb_rsp_rdata,  // 取得的指令
 
   `endif//}
 
@@ -92,14 +90,14 @@ module e203_ifu_ift2icb(
   input  ifu2biu_icb_cmd_ready, // Handshake ready
             // Note: The data on rdata or wdata channel must be naturally
             //       aligned, this is in line with the AXI definition
-  output [`E203_ADDR_SIZE-1:0]   ifu2biu_icb_cmd_addr, // Bus transaction start addr 
+  output [`E203_ADDR_SIZE-1:0]   ifu2biu_icb_cmd_addr, 			// 总线访问地址
 
   //    * Bus RSP channel
   input  ifu2biu_icb_rsp_valid, // Response valid 
   output ifu2biu_icb_rsp_ready, // Response ready
   input  ifu2biu_icb_rsp_err,   // Response error
             // Note: the RSP rdata is inline with AXI definition
-  input  [`E203_SYSMEM_DATA_WIDTH-1:0] ifu2biu_icb_rsp_rdata, 
+  input  [`E203_SYSMEM_DATA_WIDTH-1:0] ifu2biu_icb_rsp_rdata, 	// 取得的指令
   
   //input  ifu2biu_replay,
   `endif//}
@@ -109,8 +107,7 @@ module e203_ifu_ift2icb(
   // since last accessed by IFU, and the output of it is holding up
   // last value. 
   `ifdef E203_HAS_ITCM //{
-  input  itcm2ifu_holdup,
-  //input  ifu2itcm_replay,
+  input  ifu2icm_holdup,		// ITCM 输出是否保持不变
   `endif//}
 
   input  clk,
@@ -214,7 +211,7 @@ module e203_ifu_ift2icb(
   // ITCM 是否 holdup
   wire ifu_req_lane_holdup = 1'b0
             `ifdef E203_HAS_ITCM //{
-            | (ifu_req_pc2itcm & itcm2ifu_holdup & (~itcm_nohold)) 
+            | (ifu_req_pc2itcm & ifu2icm_holdup & (~itcm_nohold)) 
             `endif//}
             ;
 
