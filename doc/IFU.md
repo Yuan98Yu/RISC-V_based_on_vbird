@@ -320,7 +320,7 @@ module e203_ifu_ifetch(
 
 ![](./assets/IFU_ift2icb.png)
 
-###	5.2 输出输出信号说明
+###	5.2 输入输出信号说明
 
 ```verilog
 module e203_ifu_ift2icb(
