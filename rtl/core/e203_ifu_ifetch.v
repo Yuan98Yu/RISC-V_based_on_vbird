@@ -82,14 +82,13 @@ module e203_ifu_ifetch(
   `endif//}
 
       
-  // The halt request come from other commit stage
-  //   If the ifu_halt_req is asserting, then IFU will stop fetching new 
-  //     instructions and after the oustanding transactions are completed,
-  //     asserting the ifu_halt_ack as the response.
-  //   The IFU will resume fetching only after the ifu_halt_req is deasserted
+  // 来源存疑，用于停止 IFU 取新的指令而只处理正在处理的指令，当 IFU 对当前指令处理完成时 通过 ifu_halt_ack 响应
   input  ifu_halt_req,
   output ifu_halt_ack,
 
+// 无 OITF
+//   input  oitf_empty,
+  // RF 的状态，上条指令的类型
   input  [`E203_XLEN-1:0] rf2ifu_x1,
   input  [`E203_XLEN-1:0] rf2ifu_rs1,
   input  dec2ifu_rs1en,
