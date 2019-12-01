@@ -107,7 +107,7 @@ module e203_ifu_ift2icb(
   // since last accessed by IFU, and the output of it is holding up
   // last value. 
   `ifdef E203_HAS_ITCM //{
-  input  ifu2icm_holdup,		// ITCM 输出是否保持不变
+  input  ifu2itcm_holdup,		// ITCM 输出是否保持不变
   `endif//}
 
   input  clk,
@@ -211,7 +211,7 @@ module e203_ifu_ift2icb(
   // ITCM 是否 holdup
   wire ifu_req_lane_holdup = 1'b0
             `ifdef E203_HAS_ITCM //{
-            | (ifu_req_pc2itcm & ifu2icm_holdup & (~itcm_nohold)) 
+            | (ifu_req_pc2itcm & ifu2itcm_holdup & (~itcm_nohold)) 
             `endif//}
             ;
 
@@ -269,6 +269,7 @@ module e203_ifu_ift2icb(
   // 判断是否可以转换状态
   assign icb_state_toggle_ena = 
             state_idle_exit_ena | state_1st_exit_ena
+			;
 
   // 判断下一个状态
   assign icb_state_nxt = 
@@ -414,6 +415,7 @@ module e203_ifu_ift2icb(
   wire ifu_req_valid_pos;
   assign ifu_icb_cmd_valid = 
                   (ifu_req_valid_pos & (~req_need_0uop))
+				  ;
                      
   // The ICB cmd address will be generated in 1 cases:
   //   * Case #1: Use current ifetch address in 1st uop, when 

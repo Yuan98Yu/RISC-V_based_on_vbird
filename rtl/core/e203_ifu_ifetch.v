@@ -87,7 +87,7 @@ module e203_ifu_ifetch(
   output ifu_halt_ack,
 
 // 无 OITF
-//   input  oitf_empty,
+  input  oitf_empty,
   // RF 的状态，上条指令的类型
   input  [`E203_XLEN-1:0] rf2ifu_x1,
   input  [`E203_XLEN-1:0] rf2ifu_rs1,

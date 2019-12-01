@@ -34,8 +34,8 @@ module e203_ifu_litebpu(input [`E203_PC_SIZE-1:0] pc,                  // 当前
                         input [`E203_XLEN-1:0] dec_bjp_imm,            // 零扩展得到的32位立即数表示的偏移量
                         input [`E203_RFIDX_WIDTH-1:0] dec_jalr_rs1idx, // jalr 使用的基地址寄存器索引
 
-						// IR，无 OITF
-						// input  oitf_empty,
+						// IR, OITF
+						input  oitf_empty,
                         input ir_empty,                                // IR 是否为空（是否有指令处于EXU）
                         input ir_rs1en,                                // IR 是否使用 rs1读端口
                         input jalr_rs1idx_cam_irrdidx,                 // 处于 IR 的指令的写回目标寄存器索引是否为x1
@@ -84,12 +84,14 @@ module e203_ifu_litebpu(input [`E203_PC_SIZE-1:0] pc,                  // 当前
     wire dec_jalr_rs1x0 = (dec_jalr_rs1idx == `E203_RFIDX_WIDTH'd0);
     wire dec_jalr_rs1x1 = (dec_jalr_rs1idx == `E203_RFIDX_WIDTH'd1);
     wire dec_jalr_rs1xn = (~dec_jalr_rs1x0) & (~dec_jalr_rs1x1);
-    
-    wire jalr_rs1x1_dep = dec_i_valid & dec_jalr & dec_jalr_rs1x1 & jalr_rs1idx_cam_irrdidx;
-    wire jalr_rs1xn_dep = dec_i_valid & dec_jalr & dec_jalr_rs1xn &               ~ir_empty;
-    
-    // if IR is under clearing, or it does not use RS1 index, then we can also treat it as non-dependency
-    wire jalr_rs1xn_dep_ir_clr = (jalr_rs1xn_dep &  (~ir_empty)) & (ir_valid_clr | (~ir_rs1en));
+
+
+	wire jalr_rs1x1_dep = dec_i_valid & dec_jalr & dec_jalr_rs1x1 & ((~oitf_empty) | (jalr_rs1idx_cam_irrdidx));
+    wire jalr_rs1xn_dep = dec_i_valid & dec_jalr & dec_jalr_rs1xn & ((~oitf_empty) | (~ir_empty));
+
+    // If only depend to IR stage (OITF is empty), then if IR is under clearing, or
+    // it does not use RS1 index, then we can also treat it as non-dependency
+    wire jalr_rs1xn_dep_ir_clr = (jalr_rs1xn_dep & oitf_empty & (~ir_empty)) & (ir_valid_clr | (~ir_rs1en));
     
     wire rs1xn_rdrf_r;
     wire rs1xn_rdrf_set = (~rs1xn_rdrf_r) & dec_i_valid & dec_jalr & dec_jalr_rs1xn & ((~jalr_rs1xn_dep) | jalr_rs1xn_dep_ir_clr);

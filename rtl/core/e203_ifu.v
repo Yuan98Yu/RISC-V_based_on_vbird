@@ -102,8 +102,8 @@ module e203_ifu(
   input  ifu_halt_req,
   output ifu_halt_ack,
 
-  // 无 OITF
-//   input  oitf_empty,
+  无 OITF
+  input  oitf_empty,
   // RF 的状态，上条指令的类型
   input  [`E203_XLEN-1:0] rf2ifu_x1,
   input  [`E203_XLEN-1:0] rf2ifu_rs1,
@@ -167,7 +167,7 @@ module e203_ifu(
     .ifu_halt_req  (ifu_halt_req ),
     .ifu_halt_ack  (ifu_halt_ack ),
 
-    // .oitf_empty    (oitf_empty   ),
+    .oitf_empty    (oitf_empty   ),
 	// 上一条指令的译码信息
     .rf2ifu_x1     (rf2ifu_x1    ),
     .rf2ifu_rs1    (rf2ifu_rs1   ),
