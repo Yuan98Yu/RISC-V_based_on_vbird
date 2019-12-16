@@ -12,9 +12,7 @@ module system
   output wire qspi_sck,
   inout wire [3:0] qspi_dq,
                            
-                           
-                           
-
+                    
   //gpio
   inout wire [31:0] gpio,//GPIO00~GPIO031
 

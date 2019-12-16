@@ -14,7 +14,6 @@ set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets IOBUF_jtag_TCK/O]
 
 #####            rst define           #####
 set_property PACKAGE_PIN P20 [get_ports mcu_rst   ]
-set_property IOSTANDARD LVCMOS33 [get_ports mcu_rst   ]
 
 
 #####                spi define               #####
@@ -48,32 +47,98 @@ set_property PACKAGE_PIN R14  [get_ports {gpio[25]}]
 set_property PACKAGE_PIN R18  [get_ports {gpio[24]}]
 
 #####             gpio/keyboards define           #####
-set_property -dict { IOSTANDARD LVCMOS33 PACKAGE_PIN K3  } [get_ports {gpio[23]}]
-set_property -dict { IOSTANDARD LVCMOS33 PACKAGE_PIN L3  } [get_ports {gpio[22]}]
-set_property -dict { IOSTANDARD LVCMOS33 PACKAGE_PIN J4  } [get_ports {gpio[21]}]
-set_property -dict { IOSTANDARD LVCMOS33 PACKAGE_PIN K4  } [get_ports {gpio[20]}]
+set_property PACKAGE_PIN K3 [get_ports {gpio[23]}]
+set_property PACKAGE_PIN L3 [get_ports {gpio[22]}]
+set_property PACKAGE_PIN J4 [get_ports {gpio[21]}]
+set_property PACKAGE_PIN K4 [get_ports {gpio[20]}]
 
-set_property -dict { IOSTANDARD LVCMOS33 PACKAGE_PIN M2  } [get_ports {gpio[19]}]
-set_property -dict { IOSTANDARD LVCMOS33 PACKAGE_PIN K6  } [get_ports {gpio[18]}]
-set_property -dict { IOSTANDARD LVCMOS33 PACKAGE_PIN J6  } [get_ports {gpio[17]}]
-set_property -dict { IOSTANDARD LVCMOS33 PACKAGE_PIN L5  } [get_ports {gpio[16]}]
+set_property PACKAGE_PIN M2 [get_ports {gpio[19]}]
+set_property PACKAGE_PIN K6 [get_ports {gpio[18]}]
+set_property PACKAGE_PIN J6 [get_ports {gpio[17]}]
+set_property PACKAGE_PIN L5 [get_ports {gpio[16]}]
 
 #####             gpio/switch_i define    	      #####
-set_property -dict { IOSTANDARD LVCMOS15 PACKAGE_PIN U6  } [get_ports {gpio[15]}]
-set_property -dict { IOSTANDARD LVCMOS15 PACKAGE_PIN W5  } [get_ports {gpio[14]}]
-set_property -dict { IOSTANDARD LVCMOS15 PACKAGE_PIN W6  } [get_ports {gpio[13]}]
-set_property -dict { IOSTANDARD LVCMOS15 PACKAGE_PIN U5  } [get_ports {gpio[12]}]
-set_property -dict { IOSTANDARD LVCMOS15 PACKAGE_PIN T5  } [get_ports {gpio[11]}]
-set_property -dict { IOSTANDARD LVCMOS15 PACKAGE_PIN T4  } [get_ports {gpio[10]}]
-set_property -dict { IOSTANDARD LVCMOS15 PACKAGE_PIN R4  } [get_ports {gpio[9]}]
-set_property -dict { IOSTANDARD LVCMOS15 PACKAGE_PIN W4  } [get_ports {gpio[8]}]
+set_property PACKAGE_PIN U6 [get_ports {gpio[15]}]
+set_property PACKAGE_PIN W5 [get_ports {gpio[14]}]
+set_property PACKAGE_PIN W6 [get_ports {gpio[13]}]
+set_property PACKAGE_PIN U5 [get_ports {gpio[12]}]
+set_property PACKAGE_PIN T5 [get_ports {gpio[11]}]
+set_property PACKAGE_PIN T4 [get_ports {gpio[10]}]
+set_property PACKAGE_PIN R4 [get_ports {gpio[9]}]
+set_property PACKAGE_PIN W4 [get_ports {gpio[8]}]
 
 #####             gpio/led define    	          #####
-set_property -dict { IOSTANDARD LVCMOS33 PACKAGE_PIN F21 } [get_ports {gpio[7]}]
-set_property -dict { IOSTANDARD LVCMOS33 PACKAGE_PIN G22 } [get_ports {gpio[6]}]
-set_property -dict { IOSTANDARD LVCMOS33 PACKAGE_PIN G21 } [get_ports {gpio[5]}]
-set_property -dict { IOSTANDARD LVCMOS33 PACKAGE_PIN D21 } [get_ports {gpio[4]}]
-set_property -dict { IOSTANDARD LVCMOS33 PACKAGE_PIN E21 } [get_ports {gpio[3]}]
-set_property -dict { IOSTANDARD LVCMOS33 PACKAGE_PIN D22 } [get_ports {gpio[2]}]
-set_property -dict { IOSTANDARD LVCMOS33 PACKAGE_PIN E22 } [get_ports {gpio[1]}]
-set_property -dict { IOSTANDARD LVCMOS33 PACKAGE_PIN A21 } [get_ports {gpio[0]}]
+set_property PACKAGE_PIN F21 [get_ports {gpio[7]}]
+set_property PACKAGE_PIN G22 [get_ports {gpio[6]}]
+set_property PACKAGE_PIN G21 [get_ports {gpio[5]}]
+set_property PACKAGE_PIN D21 [get_ports {gpio[4]}]
+set_property PACKAGE_PIN E21 [get_ports {gpio[3]}]
+set_property PACKAGE_PIN D22 [get_ports {gpio[2]}]
+set_property PACKAGE_PIN E22 [get_ports {gpio[1]}]
+set_property PACKAGE_PIN A21 [get_ports {gpio[0]}]
+
+
+
+#####            rst define           #####
+set_property IOSTANDARD LVCMOS33 [get_ports mcu_rst   ]
+
+
+#####                spi define               #####
+set_property IOSTANDARD LVCMOS33 [get_ports  qspi_cs    ]
+set_property IOSTANDARD LVCMOS33 [get_ports  qspi_sck   ]
+set_property IOSTANDARD LVCMOS33 [get_ports {qspi_dq[3]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {qspi_dq[2]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {qspi_dq[1]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {qspi_dq[0]}]
+
+
+#####               MCU JTAG define           #####
+set_property IOSTANDARD LVCMOS33 [get_ports mcu_TDO]
+set_property IOSTANDARD LVCMOS33 [get_ports mcu_TCK]
+set_property IOSTANDARD LVCMOS33 [get_ports mcu_TDI]
+set_property IOSTANDARD LVCMOS33 [get_ports mcu_TMS]
+
+#####                PMU define               #####
+set_property IOSTANDARD LVCMOS33 [get_ports pmu_paden ]
+set_property IOSTANDARD LVCMOS33 [get_ports pmu_padrst]
+set_property IOSTANDARD LVCMOS33 [get_ports mcu_wakeup]
+
+#####                gpio define              #####
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[31]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[30]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[29]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[28]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[27]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[26]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[25]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[24]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[23]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[22]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[21]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[20]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[19]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[18]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[17]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[16]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[15]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[14]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[13]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[12]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[11]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[10]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[9]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[8]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[7]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[6]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[5]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[4]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[3]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[2]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[1]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio[0]}]
+
+
+#####         SPI Configurate Setting        #######
+set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 4 [current_design] 
+set_property CONFIG_MODE SPIx4 [current_design] 
+set_property BITSTREAM.CONFIG.CONFIGRATE 50 [current_design]
